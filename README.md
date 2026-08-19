@@ -1,145 +1,43 @@
-# LINE Bot + AI 自動応答システム
+# 美容室向け LINE Bot + AI 自動応答システム
 
-美容室向け LINE 公式アカウントの AI 自動応答システム。
+美容室の LINE 公式アカウントに届いた質問に、登録済みの FAQ・メニュー情報だけを根拠に AI が自動返信するシステムです。AI が自信を持って答えられない質問は、オーナーへ LINE 通知のうえ管理画面でエスカレーション管理し、誤情報の送信を防ぎます。
+
+**公開 URL**: https://salon-line-bot-ai.vercel.app
+
+<img src="docs/screenshots/login.png" alt="管理画面ログイン画面" width="360" />
+
+## 主な機能
+
+- **AI 自動応答** — Claude API が FAQ・メニュー情報のみを根拠に回答を生成。登録にない内容は推測せず、確信度が低い場合は自動回答しない
+- **エスカレーション** — AI が回答できない質問は、オーナーへ LINE 通知 + 管理画面の「要対応」一覧に記録
+- **管理画面（スマホファースト）** — FAQ・メニュー・料金の CRUD、会話ログの閲覧、お知らせの一斉配信
+- **認証・権限管理** — Supabase Auth（メール＋パスワード）と Row Level Security によるアクセス制御
 
 ## 技術スタック
 
-- Next.js 16 (App Router) + TypeScript + Tailwind CSS
-- Supabase (PostgreSQL + Auth + RLS)
-- Claude API (Anthropic)
-- LINE Messaging API
-- Vercel
+| レイヤー | 技術 |
+|---|---|
+| フロントエンド／API | [Next.js 16](https://nextjs.org/)（App Router）+ TypeScript |
+| スタイリング | Tailwind CSS 4 |
+| データベース／認証 | [Supabase](https://supabase.com/)（PostgreSQL + Auth + RLS） |
+| AI | [Claude API](https://www.anthropic.com/api)（`claude-haiku-4-5`） |
+| LINE 連携 | [LINE Messaging API](https://developers.line.biz/ja/docs/messaging-api/)（`@line/bot-sdk`） |
+| ホスティング | [Vercel](https://vercel.com/)（GitHub 連携・自動デプロイ） |
 
-## セットアップ
-
-### 1. 依存関係インストール
-
-```bash
-npm install
-```
-
-### 2. 環境変数
-
-`.env.local.example` を `.env.local` にコピーし、各値を設定してください。
-
-```bash
-cp .env.local.example .env.local
-```
-
-### 3. Supabase テーブル作成
-
-Supabase ダッシュボードの SQL Editor で以下を実行:
+## アーキテクチャ
 
 ```
-supabase/migrations/001_initial_schema.sql
-```
-
-作成されるテーブル:
-- `faqs` — FAQ
-- `menus` — メニュー・料金
-- `conversations` — 会話ログ
-
-### 4. LINE Messaging API 設定
-
-1. [LINE Developers Console](https://developers.line.biz/) でチャネル作成
-2. Channel Secret / Channel Access Token を `.env.local` に設定
-3. Webhook URL を設定: `https://your-domain.vercel.app/api/webhook/line`
-4. Webhook の利用を ON にする
-5. 応答メッセージを OFF にする（Bot が返信するため）
-
-### 5. 開発サーバー起動
-
-**ターミナル1** — Next.js（port 3000 を使う）:
-
-```bash
-npm run dev:3000
-```
-
-**ターミナル2** — ngrok（別ターミナルで起動）:
-
-```bash
-ngrok http 3000
-```
-
-> `npm run dev` と `ngrok` を同じターミナルで実行しないでください。  
-> `npm run dev` がブロックするため ngrok が起動しません。
-
-### 6. LINE Webhook 設定
-
-1. ngrok の URL をコピー（例: `https://xxxx.ngrok-free.app`）
-2. LINE Developers → Messaging API → Webhook URL に設定:
-   `https://xxxx.ngrok-free.app/api/webhook/line`
-3. **Verify** ボタンで成功することを確認
-4. Webhook の利用 → **ON**
-5. 応答メッセージ → **OFF**（Bot が返信するため）
-
-## トラブルシューティング
-
-### メッセージを送っても反応がない
-
-| 確認項目 | 対処 |
-|---------|------|
-| ngrok が起動しているか | 別ターミナルで `ngrok http 3000` を実行 |
-| ポートが一致しているか | ngrok は **3000**、Next.js も **3000** で起動 |
-| 古い Next.js プロセスが残っていないか | `lsof -i :3000` で確認し、古い process を停止 |
-| Webhook Verify が成功するか | LINE Developers で Verify → Success になること |
-| ターミナルに POST ログが出るか | メッセージ送信時 `[LINE Webhook] POST received` が表示される |
-| 応答メッセージが OFF か | ON のままだと LINE 側の自動応答と競合する |
-
-### ポート 3000 が使用中の場合
-
-```bash
-# 使用中のプロセスを確認
-lsof -i :3000
-
-# 古い next dev を停止（PID は上記で確認）
-kill <PID>
-
-# 再起動
-npm run dev:3000
-```
-
-## 現在のフェーズ: 管理画面（Phase 3）✅
-
-### 管理画面ルート
-
-| パス | 機能 |
-|------|------|
-| `/login` | ログイン |
-| `/admin` | ダッシュボード |
-| `/admin/faq` | FAQ 追加・編集・削除 |
-| `/admin/menu` | メニュー・料金更新 |
-| `/admin/conversations` | 会話ログ・要対応一覧 |
-| `/admin/broadcast` | お知らせ一斉配信 |
-
-### Supabase セットアップ（管理画面に必須）
-
-1. [supabase.com](https://supabase.com) でプロジェクト作成
-2. SQL Editor で以下を順に実行:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_unanswered_questions.sql`
-   - `supabase/migrations/003_announcements.sql`
-3. **Authentication → Users** でオーナー用アカウント作成（メール+パスワード）
-4. `.env.local` に Supabase の URL / キーを設定
-5. `/login` からログイン
-
-### UI 方針
-
-- スマホファースト（最大幅 512px）
-- ボタン最小高さ 44px
-- 処理中はスピナー表示
-
-## テスト
-
-```bash
-# ビルド
-npm run build
-
-# Webhook 署名テスト用データ生成
-node scripts/test-webhook.mjs
-
-# Webhook 疎通確認
-curl http://localhost:3000/api/webhook/line
+LINE 公式アカウント
+      │  Webhook（署名検証つき）
+      ▼
+Next.js / Vercel  ──── FAQ・メニュー参照 ────▶  Supabase (PostgreSQL)
+      │                                              ▲
+      │  回答生成リクエスト                             │ 会話ログ・未回答質問を保存
+      ▼                                              │
+Claude API ─────────────────────────────────────────┘
+      │  reply / push message
+      ▼
+お客様 または オーナーの LINE
 ```
 
 ## ディレクトリ構成
@@ -147,17 +45,50 @@ curl http://localhost:3000/api/webhook/line
 ```
 src/
 ├── app/
-│   ├── api/webhook/line/   # LINE Webhook
-│   └── page.tsx            # トップページ
+│   ├── api/webhook/line/   # LINE Webhook エンドポイント
+│   ├── api/broadcast/      # 一斉配信 API
+│   ├── admin/              # 管理画面（FAQ・メニュー・会話ログ・配信）
+│   └── login/               # ログイン画面
 ├── lib/
-│   ├── supabase/           # Supabase クライアント
-│   ├── line/               # LINE SDK ラッパー
-│   └── services/           # メッセージ処理
-└── types/                  # 型定義
-supabase/migrations/        # DB マイグレーション
+│   ├── supabase/           # Supabase クライアント（client / server / admin / middleware）
+│   ├── line/                # LINE SDK ラッパー（署名検証・送受信）
+│   └── ai/                  # Claude API 連携（プロンプト・応答生成・コンテキスト取得）
+└── types/                   # 型定義
+supabase/migrations/         # DB マイグレーション
 ```
 
-## 次のステップ（Phase 2）
+## ローカルで動かす
 
-- FAQ 自動応答（Claude API 連携）
-- 回答不能時のオーナー通知・エスカレーション
+```bash
+git clone https://github.com/miyuc75-creator/salon-line-bot-ai.git
+cd salon-line-bot-ai
+npm install
+cp .env.local.example .env.local   # 値を設定
+npm run dev:3000
+```
+
+Supabase のテーブル作成・LINE Webhook 設定など、詳細なセットアップ手順はプロジェクトの引き継ぎドキュメント（セットアップ手順書）を参照してください。
+
+### 環境変数
+
+| 変数名 | 用途 |
+|---|---|
+| `LINE_CHANNEL_SECRET` | Webhook 署名検証 |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE API 認証 |
+| `LINE_OWNER_USER_ID` | エスカレーション通知先 |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase プロジェクト URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 公開キー |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 管理者キー（サーバー専用） |
+| `ANTHROPIC_API_KEY` | Claude API キー |
+
+## デプロイ
+
+`main` ブランチへの push で Vercel が自動ビルド・デプロイします。
+
+## 開発コマンド
+
+```bash
+npm run dev      # 開発サーバー起動
+npm run build    # ビルド
+npm run lint     # Lint
+```
