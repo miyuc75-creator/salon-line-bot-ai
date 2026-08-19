@@ -5,6 +5,12 @@
 **公開 URL**: https://salon-line-bot-ai.vercel.app
 
 <img src="docs/screenshots/login.png" alt="管理画面ログイン画面" width="360" />
+<img width="1278" height="652" alt="スクリーンショット 2026-08-20 6 35 27" src="https://github.com/user-attachments/assets/1149f864-c128-4852-bf21-a3ffaaad82c2" />
+<img width="1278" height="652" alt="スクリーンショット 2026-08-20 6 35 17" src="https://github.com/user-attachments/assets/1a3246e7-133b-4094-b7a4-ff85fb43df6a" />
+<img width="1278" height="652" alt="スクリーンショット 2026-08-20 6 35 10" src="https://github.com/user-attachments/assets/80b1f6a6-0665-43f0-bb38-3bc6bef4d5f8" />
+<img width="1278" height="652" alt="スクリーンショット 2026-08-20 6 35 05" src="https://github.com/user-attachments/assets/dbbf946b-35d3-4062-91e9-f66d73c0afd2" />
+<img width="1278" height="652" alt="スクリーンショット 2026-08-20 6 34 54" src="https://github.com/user-attachments/assets/a0d067bf-f76f-4892-8175-dda0942b8994" />
+
 
 ## 主な機能
 
